@@ -476,11 +476,9 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="toast" id="toast"></div>
 
 <script>
-// ===================== PRODUCT DATA =====================
-const PRODUCTS_DEFAULT = [{"titulo": "VARILLAS DE RATTAN NEGRAS 15CM X 100 VARILLAS", "precio": "5631.39", "codigo": "085Y", "aromas": [], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/Q8YAEZJolAj0tWRMFalH5qIQGTTsi7RBcAUnbRQ6.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/SpifZH0HEEhed39JSYVARPiN9pOf5F5CPox2sWtT.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/phZfPCqTiCl2ZBbEDJYIaXfcJLN09jz017sjtJmy.webp"], "activo": true}, {"titulo": "ESENCIA HORNILLO COLGABLE 10 ML X UNIDAD", "precio": "967.68", "codigo": "051", "aromas": ["SURTIDO", "VAINILLA ENCANTADA", "SAND. HINDÚ", "LIMÓN", "LAVANDA FRANCESA", "INCIENSO CONSAGRADO", "ROSA BULGARA", "PALO SANTO", "COCO", "DULCES FRUTILLAS", "NARANJA PIMIENTA", "CAPULLOS DE JAZMÍN", "FRESIA", "CITRONELLA", "SAI CHAMPA (limpieza de hogar)", ".SURTIDO"], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/7rkRJSNkc6RLpAUM5XQKjtrARldFlmg8TuEe6iev.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/0p9dXVYTPVwF76aVUKFKSTXGyYp46dt5ubxr0YMm.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/wEMdSjpHn5CGCOqV3LyZhzOwW1qVeilrH512Zyz8.webp"], "activo": true}];
 
 // ===================== STATE =====================
-let products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
+let products = [];
 let cart = JSON.parse(localStorage.getItem('noesencias_cart') || '[]');
 let currentFilter = '';
 let currentProduct = null;
@@ -1151,12 +1149,15 @@ async function apChangePassword() {
   setTimeout(()=>{msg.textContent='';msg.style.color='#e05555';},3000);
 }
 
-function apResetCatalog() {
-  if(!confirm('¿Resetear el catálogo? Se borrarán todos los cambios guardados.')) return;
+async function apResetCatalog() {
+  if(!confirm('¿Resetear el catálogo local? Se borrarán los cambios de tu PC y volverás a ver la versión pública actual.')) return;
   localStorage.removeItem('noesencias_products');
-  products = [...PRODUCTS_DEFAULT];
+  try {
+    const response = await fetch('catalogo.json?v=' + new Date().getTime());
+    products = await response.json();
+  } catch(e) { products = []; }
   buildFilters(); filterProducts(); apRenderList(); apRenderStats();
-  showToast('✓ Catálogo reseteado');
+  showToast('✓ Catálogo reseteado a versión pública');
 }
 
 // legacy stubs (keep compatibility)
@@ -1225,9 +1226,34 @@ function processAdminFile(file) {
 }
 
 // ===================== INIT =====================
-buildFilters();
-filterProducts();
-updateCartBadge();
-</script>
-</body>
-</html>
+async function initTienda() {
+  try {
+    // 1. Descarga el catálogo público desde GitHub
+    const response = await fetch('catalogo.json?v=' + new Date().getTime());
+    const data = await response.json();
+    
+    // 2. Revisa si en tu PC admin hay cambios guardados sin subir
+    const localData = localStorage.getItem('noesencias_products');
+    
+    // 3. Usa lo local para el admin, o lo público para los clientes
+    products = localData ? JSON.parse(localData) : data;
+    
+  } catch(err) {
+    console.error('Error al cargar catálogo:', err);
+    products = JSON.parse(localStorage.getItem('noesencias_products') || '[]');
+  }
+  
+  buildFilters();
+  filterProducts();
+  updateCartBadge();
+}
+
+initTienda();
+¡Listo! Cómo publicar tu web de ahora en más
+Guarda los cambios en este index.html y súbelo a GitHub.
+
+Entra al panel de control en tu web y usa el botón "⬇ Descargar como JSON" para descargar todo tu catálogo actualizado.
+
+Ese archivo descargado renómbralo a catalogo.json (si es que se descargó con otro nombre).
+
+Sube ese archivo catalogo.json a GitHub, en el mismo lugar donde está tu index.html.
