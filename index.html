@@ -69,7 +69,6 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
   position:relative;
   width:100%;
   background:var(--sand);
-  /* RECORTE: Reducimos la altura máxima de la imagen principal */
   max-height: 50vh; 
   overflow: hidden;
   display: flex;
@@ -80,13 +79,14 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .modal-imgs{display:flex;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory}
 .modal-imgs::-webkit-scrollbar{display:none}
 .modal-img{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:1;object-fit:cover}
+
 /* --- NUEVOS ESTILOS PARA MINIATURAS --- */
 .modal-thumbnails {
   display: flex;
   gap: 8px;
   padding: 10px 16px;
   justify-content: center;
-  overflow-x: auto; /* Por si hay muchas imágenes */
+  overflow-x: auto;
   background: var(--cream);
 }
 .modal-thumbnail {
@@ -104,6 +104,7 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
   opacity: 1;
   transform: scale(1.05);
 }
+
 .modal-body{padding:16px 16px 0}
 .modal-cod{font-size:11px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:300;line-height:1.2;margin-bottom:4px}
@@ -247,7 +248,7 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .ap-del-confirm p{color:#f5a5a5;font-size:13px;margin-bottom:12px;font-family:'DM Sans',sans-serif}
 .ap-del-confirm-btns{display:flex;gap:8px}
 
-/* Import tab (reuse existing styles adapted) */
+/* Import tab */
 .ap-import-wrap{padding:16px;display:flex;flex-direction:column;gap:12px}
 .ap-drop{border:2px dashed #333;border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;transition:border .2s}
 .ap-drop.drag{border-color:#c9a96e}
@@ -265,7 +266,6 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .ap-pwd-wrap{padding:16px;display:flex;flex-direction:column;gap:12px}
 .ap-pwd-wrap label{color:#888;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-family:'DM Sans',sans-serif}
 
-
 /* Toggle publicado */
 .ap-toggle-wrap{display:flex;align-items:center;gap:8px;padding:8px 0}
 .ap-toggle-wrap span{color:#aaa;font-size:12px;font-family:'DM Sans',sans-serif}
@@ -275,13 +275,12 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .ap-toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
 .ap-toggle input:checked + .ap-toggle-slider{background:#4a6741}
 .ap-toggle input:checked + .ap-toggle-slider:before{transform:translateX(20px)}
+
 /* Badge inactivo en la card */
 .card.inactive{opacity:.45;position:relative}
 .card.inactive::after{content:'DESACTIVADO';position:absolute;top:6px;right:6px;background:#b84040;color:#fff;font-size:9px;font-weight:600;padding:3px 6px;border-radius:4px;letter-spacing:.5px}
-/* Dot en lista admin */
 .ap-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-left:4px}
 .ap-dot.on{background:#4a6741}.ap-dot.off{background:#b84040}
-
 </style>
 </head>
 <body>
@@ -325,7 +324,7 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 <div class="modal" id="modal">
   <div class="modal-handle"></div>
-<div class="modal-img-wrap">
+  <div class="modal-img-wrap">
     <img class="modal-img-main" id="modalMainImg" src="" alt="">
   </div>
   <div class="modal-thumbnails" id="modalThumbnails"></div>
@@ -362,7 +361,6 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 </div>
 
 <div class="ap-overlay" id="apOverlay">
-
   <div class="ap-login" id="apLogin">
     <div class="ap-login-box">
       <h2>🔐 Panel de administración</h2>
@@ -602,7 +600,7 @@ function renderGrid(prods) {
     </div>`).join('');
 }
 
-// ===================== MODAL MODIFICADO =====================
+// ===================== MODAL =====================
 function openModal(idx) {
   currentProduct = products[idx];
   currentAroma = null;
@@ -613,55 +611,32 @@ function openModal(idx) {
   document.getElementById('aromaSearch').value = '';
   document.getElementById('aromaSearch').style.display = currentProduct.aromas.length > 8 ? 'block' : 'none';
 
-  // --- LÓGICA DE IMÁGENES MODIFICADA ---
-  
   // 1. Establecer la primera imagen como principal por defecto
   const mainImgEl = document.getElementById('modalMainImg');
   if (currentProduct.imagenes && currentProduct.imagenes.length > 0) {
       mainImgEl.src = currentProduct.imagenes[0];
       mainImgEl.style.display = 'block';
   } else {
-      mainImgEl.style.display = 'none'; // Por si acaso no hay imagen
+      mainImgEl.style.display = 'none';
   }
 
   // 2. Generar las miniaturas
   const thumbsContainer = document.getElementById('modalThumbnails');
-  thumbsContainer.innerHTML = ''; // Limpiar anteriores
+  thumbsContainer.innerHTML = ''; 
 
-  // Solo mostrar miniaturas si hay más de una imagen
   if (currentProduct.imagenes && currentProduct.imagenes.length > 1) {
       thumbsContainer.style.display = 'flex';
-      
       currentProduct.imagenes.forEach((url, i) => {
           const thumb = document.createElement('img');
-          thumb.className = `modal-thumbnail ${i === 0 ? 'active' : ''}`; // La primera está activa
+          thumb.className = `modal-thumbnail ${i === 0 ? 'active' : ''}`;
           thumb.src = url;
           thumb.alt = `Miniatura ${i + 1}`;
-          // Al hacer clic, cambiamos la imagen principal
           thumb.onclick = () => setModalMainImage(i);
           thumbsContainer.appendChild(thumb);
       });
   } else {
-      thumbsContainer.style.display = 'none'; // Ocultar si hay 0 o 1 imagen
+      thumbsContainer.style.display = 'none';
   }
-
-// --- NUEVA FUNCIÓN PARA CAMBIAR IMAGEN PRINCIPAL ---
-function setModalMainImage(index) {
-    // 1. Cambiar el 'src' de la imagen principal
-    document.getElementById('modalMainImg').src = currentProduct.imagenes[index];
-
-    // 2. Actualizar qué miniatura se ve 'activa'
-    const thumbs = document.querySelectorAll('.modal-thumbnail');
-    thumbs.forEach((thumb, i) => {
-        if (i === index) {
-            thumb.classList.add('active');
-        } else {
-            thumb.classList.remove('active');
-        }
-    });
-}
-
-  // -------------------------------------
 
   filteredAromas = [...currentProduct.aromas];
   renderAromas();
@@ -673,6 +648,56 @@ function setModalMainImage(index) {
   document.getElementById('modal').classList.add('open');
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function setModalMainImage(index) {
+    document.getElementById('modalMainImg').src = currentProduct.imagenes[index];
+    const thumbs = document.querySelectorAll('.modal-thumbnail');
+    thumbs.forEach((thumb, i) => {
+        if (i === index) {
+            thumb.classList.add('active');
+        } else {
+            thumb.classList.remove('active');
+        }
+    });
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderAromas() {
+  const grid = document.getElementById('aromaGrid');
+  if(!filteredAromas.length) {
+    grid.innerHTML = '<div style="width:100%;text-align:center;color:var(--mid);padding:10px;font-size:13px">No hay aromas que coincidan</div>';
+    return;
+  }
+  grid.innerHTML = filteredAromas.map(a => {
+    const isSel = currentAroma === a;
+    const name = a.startsWith('.') ? a.slice(1) : a;
+    return `<button class="aroma-chip ${isSel?'selected':''}" onclick="selectAroma('${a}')">${name}</button>`;
+  }).join('');
+}
+
+function filterAromas() {
+  const q = document.getElementById('aromaSearch').value.toLowerCase().trim();
+  filteredAromas = currentProduct.aromas.filter(a => {
+    const name = a.startsWith('.') ? a.slice(1) : a;
+    return name.toLowerCase().includes(q);
+  });
+  renderAromas();
+}
+
+function selectAroma(a) {
+  currentAroma = a;
+  const name = a.startsWith('.') ? a.slice(1) : a;
+  document.getElementById('aromaSelected').textContent = name;
+  renderAromas();
+  const btn = document.getElementById('btnCart');
+  btn.disabled = false;
+  btn.textContent = 'Agregar al carrito';
 }
 
 // ===================== CART =====================
@@ -1191,71 +1216,6 @@ function apResetCatalog() {
   products = [...PRODUCTS_DEFAULT];
   buildFilters(); filterProducts(); apRenderList(); apRenderStats();
   showToast('✓ Catálogo reseteado');
-}
-
-// legacy stubs (keep compatibility)
-function handleDrop(e){}
-function handleFileSelect(e){}
-
-function processAdminFile(file) {
-  const result = document.getElementById('adminResult');
-  result.className = 'admin-result visible';
-  result.textContent = '⏳ Procesando ' + file.name + '…';
-
-  if(file.name.endsWith('.json')) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if(Array.isArray(data) && data[0]?.titulo) {
-          products = data;
-          localStorage.setItem('noesencias_products', JSON.stringify(products));
-          buildFilters(); filterProducts();
-          result.textContent = `✅ ${products.length} productos importados correctamente desde JSON.`;
-          showToast('✓ Catálogo actualizado');
-        } else {
-          result.textContent = '❌ Formato JSON no reconocido. Debe ser array con {titulo, precio, codigo, aromas[], imagenes[]}';
-        }
-      } catch(err) { result.textContent = '❌ Error: ' + err.message; }
-    };
-    reader.readAsText(file);
-    return;
-  }
-
-  if(file.name.endsWith('.csv')) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const rows = e.target.result.split('\n').map(r => r.split(','));
-        const headers = rows[0].map(h => h.trim().toLowerCase());
-        const tIdx = headers.findIndex(h => h.includes('titulo')||h.includes('title'));
-        const pIdx = headers.findIndex(h => h.includes('costo')||h.includes('precio')||h.includes('price'));
-        const cIdx = headers.findIndex(h => h.includes('codigo')||h.includes('code'));
-        if(tIdx<0) { result.textContent='❌ No se encontró columna Titulo en el CSV'; return; }
-        const imported = rows.slice(1).filter(r=>r[tIdx]?.trim()).map(r => {
-          let aromas = [];
-          const aIdx2 = headers.findIndex(h => h==='aroma'||h==='aromas');
-          if(aIdx2>=0 && r[aIdx2]) {
-            aromas = r[aIdx2].split('+').map(a=>a.replace(/[\n\r]/g,' ').replace(/\u00a0/g,' ').trim()).filter(a=>a&&a.toLowerCase()!=='cantidad');
-          } else {
-            headers.forEach((h,i) => { if(h.startsWith('aroma') && r[i]?.trim()) aromas.push(r[i].trim()); });
-          }
-          const imgs = [];
-          headers.forEach((h,i) => { if(h.startsWith('imagen') && r[i]?.trim()) imgs.push(r[i].trim()); });
-          return { titulo: r[tIdx]?.trim() || 'Sin título', precio: r[pIdx]?.replace(/[$.]/g,'').replace(',','.') || '0', codigo: r[cIdx]?.trim() || '', aromas, imagenes:imgs };
-        });
-        products = imported;
-        localStorage.setItem('noesencias_products', JSON.stringify(products));
-        buildFilters(); filterProducts();
-        result.textContent = `✅ ${products.length} productos importados desde CSV.`;
-        showToast('✓ Catálogo actualizado');
-      } catch(err) { result.textContent = '❌ Error al leer CSV: ' + err.message; }
-    };
-    reader.readAsText(file, 'latin-1');
-    return;
-  }
-
-  result.textContent = '⚠️ Para archivos .ODS o .XLSX, por favor convertí primero a CSV o JSON.\n\nPodés hacerlo en LibreOffice o Google Sheets → Archivo → Descargar como → CSV.\n\nEl CSV debe tener columnas: Titulo, Costo, Codigo, Aroma_1…Aroma_N, Imagen_1…Imagen_N';
 }
 
 // ===================== INIT =====================
