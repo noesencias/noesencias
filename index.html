@@ -529,8 +529,7 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="toast" id="toast"></div>
 
 <script>
-// ===================== PRODUCT DATA =====================
-const PRODUCTS_DEFAULT = [{"titulo": "VARILLAS DE RATTAN NEGRAS 15CM X 100 VARILLAS", "precio": "5631.39", "codigo": "085Y", "aromas": [], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/Q8YAEZJolAj0tWRMFalH5qIQGTTsi7RBcAUnbRQ6.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/SpifZH0HEEhed39JSYVARPiN9pOf5F5CPox2sWtT.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/phZfPCqTiCl2ZBbEDJYIaXfcJLN09jz017sjtJmy.webp"], "activo": true}, {"titulo": "ESENCIA HORNILLO COLGABLE 10 ML X UNIDAD", "precio": "967.68", "codigo": "051", "aromas": ["SURTIDO", "VAINILLA ENCANTADA", "SAND. HINDÚ", "LIMÓN", "LAVANDA FRANCESA", "INCIENSO CONSAGRADO", "ROSA BULGARA", "PALO SANTO", "COCO", "DULCES FRUTILLAS", "NARANJA PIMIENTA", "CAPULLOS DE JAZMÍN", "FRESIA", "CITRONELLA", "SAI CHAMPA (limpieza de hogar)", ".SURTIDO"], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/7rkRJSNkc6RLpAUM5XQKjtrARldFlmg8TuEe6iev.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/0p9dXVYTPVwF76aVUKFKSTXGyYp46dt5ubxr0YMm.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/wEMdSjpHn5CGCOqV3LyZhzOwW1qVeilrH512Zyz8.webp"], "activo": true}];
+
 
 // ===================== STATE =====================
 let products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
