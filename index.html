@@ -530,9 +530,10 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 
 <script>
 
+// ===================== PRODUCT DATA =====================
 
 // ===================== STATE =====================
-let products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
+let products = [];
 let cart = JSON.parse(localStorage.getItem('noesencias_cart') || '[]');
 let currentFilter = '';
 let currentProduct = null;
@@ -1283,7 +1284,6 @@ function apResetCatalog() {
   showToast('✓ Catálogo reseteado');
 }
 
-
 // ===================== INIT AUTOMÁTICO =====================
 async function iniciarTienda() {
   try {
@@ -1299,8 +1299,8 @@ async function iniciarTienda() {
     }
   } catch (error) {
     console.log('Usando catálogo local de respaldo.');
-    // Si falla (o si estás probando en tu PC sin servidor), usa lo que haya guardado
-    products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
+    // Si falla, usa lo que haya en la memoria del navegador o una lista vacía
+    products = JSON.parse(localStorage.getItem('noesencias_products') || '[]');
   }
   
   buildFilters();
