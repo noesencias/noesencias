@@ -110,6 +110,26 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:300;line-height:1.2;margin-bottom:4px}
 .modal-price{font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--accent);margin-bottom:16px}
 
+/* BOTON CERRAR MODAL */
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--light);
+  color: var(--dark);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
 /* AROMA SELECTOR */
 .aroma-label{font-size:12px;font-weight:500;color:var(--mid);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px}
 .aroma-selected{font-size:14px;font-weight:500;color:var(--dark);margin-bottom:10px;min-height:20px}
@@ -324,6 +344,9 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 <div class="modal" id="modal">
   <div class="modal-handle"></div>
+
+<button class="modal-close-btn" onclick="closeModal()">✕</button>
+
   <div class="modal-img-wrap">
     <img class="modal-img-main" id="modalMainImg" src="" alt="">
   </div>
@@ -663,10 +686,53 @@ function setModalMainImage(index) {
 }
 
 function closeModal() {
-  document.getElementById('modal').classList.remove('open');
+  const modalEl = document.getElementById('modal');
+  modalEl.style.transform = ''; // Limpia el arrastre del dedo
+  modalEl.classList.remove('open');
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
+
+// --- LÓGICA PARA CERRAR DESLIZANDO HACIA ABAJO (SWIPE TO CLOSE) ---
+const modalElement = document.getElementById('modal');
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+modalElement.addEventListener('touchstart', (e) => {
+  // Solo iniciar el arrastre si estamos arriba del todo en el modal
+  if (modalElement.scrollTop <= 5) {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    modalElement.style.transition = 'none'; // Quita la animación para seguir al dedo
+  }
+}, {passive: true});
+
+modalElement.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  currentY = e.touches[0].clientY;
+  let deltaY = currentY - startY;
+  
+  // Si el usuario desliza hacia abajo, movemos el modal visualmente
+  if (deltaY > 0) {
+    modalElement.style.transform = `translateY(${deltaY}px)`;
+  }
+}, {passive: true});
+
+modalElement.addEventListener('touchend', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+  modalElement.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)'; // Restaura la animación
+  
+  let deltaY = currentY - startY;
+  // Si deslizó más de 120px hacia abajo, cerramos el modal
+  if (deltaY > 120) {
+    closeModal();
+  } else {
+    // Si se arrepintió y soltó antes, vuelve a su lugar original
+    modalElement.style.transform = '';
+  }
+});
 
 function renderAromas() {
   const grid = document.getElementById('aromaGrid');
@@ -1217,6 +1283,7 @@ function apResetCatalog() {
   buildFilters(); filterProducts(); apRenderList(); apRenderStats();
   showToast('✓ Catálogo reseteado');
 }
+
 
 // ===================== INIT AUTOMÁTICO =====================
 async function iniciarTienda() {
