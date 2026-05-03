@@ -1218,10 +1218,32 @@ function apResetCatalog() {
   showToast('✓ Catálogo reseteado');
 }
 
-// ===================== INIT =====================
-buildFilters();
-filterProducts();
-updateCartBadge();
+// ===================== INIT AUTOMÁTICO =====================
+async function iniciarTienda() {
+  try {
+    // Intenta leer el archivo catalogo.json de GitHub
+    const respuesta = await fetch('catalogo.json?v=' + new Date().getTime()); // Evita que quede en caché
+    if (respuesta.ok) {
+      const data = await respuesta.json();
+      products = data.map(p => ({ activo: true, ...p }));
+      // Guardamos una copia local por si falla el internet
+      localStorage.setItem('noesencias_products', JSON.stringify(products)); 
+    } else {
+      throw new Error('Archivo no encontrado');
+    }
+  } catch (error) {
+    console.log('Usando catálogo local de respaldo.');
+    // Si falla (o si estás probando en tu PC sin servidor), usa lo que haya guardado
+    products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
+  }
+  
+  buildFilters();
+  filterProducts();
+  updateCartBadge();
+}
+
+iniciarTienda();
+
 </script>
 </body>
 </html>
