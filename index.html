@@ -65,13 +65,45 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 .modal{position:fixed;bottom:0;left:0;right:0;background:var(--cream);border-radius:20px 20px 0 0;z-index:201;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal.open{transform:translateY(0)}
 .modal-handle{width:36px;height:4px;background:var(--light);border-radius:2px;margin:12px auto 0}
-.modal-img-wrap{position:relative;width:100%;background:var(--sand)}
+.modal-img-wrap{
+  position:relative;
+  width:100%;
+  background:var(--sand);
+  /* RECORTE: Reducimos la altura máxima de la imagen principal */
+  max-height: 50vh; 
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--light);
+}
 .modal-imgs{display:flex;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory}
 .modal-imgs::-webkit-scrollbar{display:none}
 .modal-img{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:1;object-fit:cover}
-.modal-dots{display:flex;justify-content:center;gap:6px;padding:8px 0}
-.modal-dot{width:6px;height:6px;border-radius:50%;background:var(--light);transition:background .2s;cursor:pointer}
-.modal-dot.active{background:var(--accent)}
+/* --- NUEVOS ESTILOS PARA MINIATURAS --- */
+.modal-thumbnails {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  justify-content: center;
+  overflow-x: auto; /* Por si hay muchas imágenes */
+  background: var(--cream);
+}
+.modal-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+.modal-thumbnail.active {
+  border-color: var(--accent);
+  opacity: 1;
+  transform: scale(1.05);
+}
 .modal-body{padding:16px 16px 0}
 .modal-cod{font-size:11px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 .modal-title{font-family:var(--font-display);font-size:22px;font-weight:300;line-height:1.2;margin-bottom:4px}
@@ -293,10 +325,10 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 <div class="modal" id="modal">
   <div class="modal-handle"></div>
-  <div class="modal-img-wrap">
-    <div class="modal-imgs" id="modalImgs"></div>
-    <div class="modal-dots" id="modalDots"></div>
+<div class="modal-img-wrap">
+    <img class="modal-img-main" id="modalMainImg" src="" alt="">
   </div>
+  <div class="modal-thumbnails" id="modalThumbnails"></div>
   <div class="modal-body">
     <div class="modal-cod" id="modalCod"></div>
     <div class="modal-title" id="modalTitle"></div>
@@ -476,9 +508,11 @@ header{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1
 <div class="toast" id="toast"></div>
 
 <script>
+// ===================== PRODUCT DATA =====================
+const PRODUCTS_DEFAULT = [{"titulo": "VARILLAS DE RATTAN NEGRAS 15CM X 100 VARILLAS", "precio": "5631.39", "codigo": "085Y", "aromas": [], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/Q8YAEZJolAj0tWRMFalH5qIQGTTsi7RBcAUnbRQ6.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/SpifZH0HEEhed39JSYVARPiN9pOf5F5CPox2sWtT.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/phZfPCqTiCl2ZBbEDJYIaXfcJLN09jz017sjtJmy.webp"], "activo": true}, {"titulo": "ESENCIA HORNILLO COLGABLE 10 ML X UNIDAD", "precio": "967.68", "codigo": "051", "aromas": ["SURTIDO", "VAINILLA ENCANTADA", "SAND. HINDÚ", "LIMÓN", "LAVANDA FRANCESA", "INCIENSO CONSAGRADO", "ROSA BULGARA", "PALO SANTO", "COCO", "DULCES FRUTILLAS", "NARANJA PIMIENTA", "CAPULLOS DE JAZMÍN", "FRESIA", "CITRONELLA", "SAI CHAMPA (limpieza de hogar)", ".SURTIDO"], "imagenes": ["https://s3c.nyc3.cdn.digitaloceanspaces.com/product/7rkRJSNkc6RLpAUM5XQKjtrARldFlmg8TuEe6iev.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/0p9dXVYTPVwF76aVUKFKSTXGyYp46dt5ubxr0YMm.webp", "https://s3c.nyc3.cdn.digitaloceanspaces.com/product_gallery/wEMdSjpHn5CGCOqV3LyZhzOwW1qVeilrH512Zyz8.webp"], "activo": true}];
 
 // ===================== STATE =====================
-let products = [];
+let products = JSON.parse(localStorage.getItem('noesencias_products') || 'null') || PRODUCTS_DEFAULT.map(p=>({activo:true,...p}));
 let cart = JSON.parse(localStorage.getItem('noesencias_cart') || '[]');
 let currentFilter = '';
 let currentProduct = null;
@@ -568,7 +602,7 @@ function renderGrid(prods) {
     </div>`).join('');
 }
 
-// ===================== MODAL =====================
+// ===================== MODAL MODIFICADO =====================
 function openModal(idx) {
   currentProduct = products[idx];
   currentAroma = null;
@@ -579,12 +613,55 @@ function openModal(idx) {
   document.getElementById('aromaSearch').value = '';
   document.getElementById('aromaSearch').style.display = currentProduct.aromas.length > 8 ? 'block' : 'none';
 
-  // Images
-  const imgs = document.getElementById('modalImgs');
-  const dots = document.getElementById('modalDots');
-  imgs.innerHTML = currentProduct.imagenes.map(url => `<img class="modal-img" src="${url}" alt="" loading="lazy">`).join('');
-  dots.innerHTML = currentProduct.imagenes.map((_,i) => `<div class="modal-dot${i===0?' active':''}" onclick="scrollImg(${i})"></div>`).join('');
-  imgs.addEventListener('scroll', updateDots, {passive:true});
+  // --- LÓGICA DE IMÁGENES MODIFICADA ---
+  
+  // 1. Establecer la primera imagen como principal por defecto
+  const mainImgEl = document.getElementById('modalMainImg');
+  if (currentProduct.imagenes && currentProduct.imagenes.length > 0) {
+      mainImgEl.src = currentProduct.imagenes[0];
+      mainImgEl.style.display = 'block';
+  } else {
+      mainImgEl.style.display = 'none'; // Por si acaso no hay imagen
+  }
+
+  // 2. Generar las miniaturas
+  const thumbsContainer = document.getElementById('modalThumbnails');
+  thumbsContainer.innerHTML = ''; // Limpiar anteriores
+
+  // Solo mostrar miniaturas si hay más de una imagen
+  if (currentProduct.imagenes && currentProduct.imagenes.length > 1) {
+      thumbsContainer.style.display = 'flex';
+      
+      currentProduct.imagenes.forEach((url, i) => {
+          const thumb = document.createElement('img');
+          thumb.className = `modal-thumbnail ${i === 0 ? 'active' : ''}`; // La primera está activa
+          thumb.src = url;
+          thumb.alt = `Miniatura ${i + 1}`;
+          // Al hacer clic, cambiamos la imagen principal
+          thumb.onclick = () => setModalMainImage(i);
+          thumbsContainer.appendChild(thumb);
+      });
+  } else {
+      thumbsContainer.style.display = 'none'; // Ocultar si hay 0 o 1 imagen
+  }
+
+// --- NUEVA FUNCIÓN PARA CAMBIAR IMAGEN PRINCIPAL ---
+function setModalMainImage(index) {
+    // 1. Cambiar el 'src' de la imagen principal
+    document.getElementById('modalMainImg').src = currentProduct.imagenes[index];
+
+    // 2. Actualizar qué miniatura se ve 'activa'
+    const thumbs = document.querySelectorAll('.modal-thumbnail');
+    thumbs.forEach((thumb, i) => {
+        if (i === index) {
+            thumb.classList.add('active');
+        } else {
+            thumb.classList.remove('active');
+        }
+    });
+}
+
+  // -------------------------------------
 
   filteredAromas = [...currentProduct.aromas];
   renderAromas();
@@ -596,47 +673,6 @@ function openModal(idx) {
   document.getElementById('modal').classList.add('open');
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-}
-
-function scrollImg(i) {
-  const imgs = document.getElementById('modalImgs');
-  imgs.scrollTo({left: imgs.offsetWidth * i, behavior:'smooth'});
-}
-
-function updateDots() {
-  const imgs = document.getElementById('modalImgs');
-  const idx = Math.round(imgs.scrollLeft / imgs.offsetWidth);
-  document.querySelectorAll('.modal-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  document.getElementById('modalOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function filterAromas() {
-  const q = document.getElementById('aromaSearch').value.toLowerCase();
-  filteredAromas = currentProduct.aromas.filter(a => a.toLowerCase().includes(q));
-  renderAromas();
-}
-
-function renderAromas() {
-  const grid = document.getElementById('aromaGrid');
-  grid.innerHTML = filteredAromas.map(a => `
-    <button class="aroma-chip${currentAroma===a?' selected':''}" onclick="selectAroma('${a.replace(/'/g,"\\'")}')">
-      ${a.startsWith('.')? a.slice(1) : a}
-    </button>`).join('');
-}
-
-function selectAroma(a) {
-  currentAroma = a;
-  const display = a.startsWith('.') ? a.slice(1) : a;
-  document.getElementById('aromaSelected').textContent = '✓ ' + display;
-  renderAromas();
-  const btn = document.getElementById('btnCart');
-  btn.disabled = false;
-  btn.textContent = 'Agregar al carrito — ' + fmt(currentProduct.precio);
 }
 
 // ===================== CART =====================
@@ -1149,15 +1185,12 @@ async function apChangePassword() {
   setTimeout(()=>{msg.textContent='';msg.style.color='#e05555';},3000);
 }
 
-async function apResetCatalog() {
-  if(!confirm('¿Resetear el catálogo local? Se borrarán los cambios de tu PC y volverás a ver la versión pública actual.')) return;
+function apResetCatalog() {
+  if(!confirm('¿Resetear el catálogo? Se borrarán todos los cambios guardados.')) return;
   localStorage.removeItem('noesencias_products');
-  try {
-    const response = await fetch('catalogo.json?v=' + new Date().getTime());
-    products = await response.json();
-  } catch(e) { products = []; }
+  products = [...PRODUCTS_DEFAULT];
   buildFilters(); filterProducts(); apRenderList(); apRenderStats();
-  showToast('✓ Catálogo reseteado a versión pública');
+  showToast('✓ Catálogo reseteado');
 }
 
 // legacy stubs (keep compatibility)
@@ -1226,29 +1259,9 @@ function processAdminFile(file) {
 }
 
 // ===================== INIT =====================
-async function initTienda() {
-  try {
-    // 1. Descarga el catálogo público desde GitHub
-    const response = await fetch('catalogo.json?v=' + new Date().getTime());
-    const data = await response.json();
-    
-    // 2. Revisa si en tu PC admin hay cambios guardados sin subir
-    const localData = localStorage.getItem('noesencias_products');
-    
-    // 3. Usa lo local para el admin, o lo público para los clientes
-    products = localData ? JSON.parse(localData) : data;
-    
-  } catch(err) {
-    console.error('Error al cargar catálogo:', err);
-    products = JSON.parse(localStorage.getItem('noesencias_products') || '[]');
-  }
-  
-  buildFilters();
-  filterProducts();
-  updateCartBadge();
-}
-
-initTienda();
+buildFilters();
+filterProducts();
+updateCartBadge();
 </script>
 </body>
 </html>
